@@ -1,7 +1,7 @@
 from ..base import ShopifyResource
 from shopify import mixins
 from .transaction import Transaction
-
+from .fulfillment_order import FulfillmentOrder
 
 class Order(ShopifyResource, mixins.Metafields, mixins.Events):
     _prefix_source = "/customers/$customer_id/"
@@ -28,3 +28,8 @@ class Order(ShopifyResource, mixins.Metafields, mixins.Events):
 
     def capture(self, amount=""):
         return Transaction.create({"amount": amount, "kind": "capture", "order_id": self.id})
+
+    def fulfillment_orders(self, **kwargs):
+        return FulfillmentOrder.find(from_="%s/orders/%s/fulfillment_orders.json" % (
+            ShopifyResource.site, self.id), **kwargs)
+
