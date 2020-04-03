@@ -28,6 +28,13 @@ class PaginationTest(TestCase):
                   body=json.dumps({ "products": fixture[:2] }),
                   response_headers=next_headers)
 
+    def test_nonpaginates_collection(self):
+        self.fake('draft_orders', method='GET', code=200, body=self.load_fixture('draft_orders'))
+        draft_orders = shopify.DraftOrder.find()
+        self.assertEqual(1, len(draft_orders))
+        self.assertEqual(517119332, draft_orders[0].id)
+        self.assertIsInstance(draft_orders, shopify.collection.PaginatedCollection, "find() result is not PaginatedCollection")
+
     def test_paginated_collection(self):
         items = shopify.Product.find(limit=2)
         self.assertIsInstance(items, shopify.collection.PaginatedCollection, "find() result is not PaginatedCollection")
@@ -75,8 +82,6 @@ class PaginationTest(TestCase):
         i = iter(c)
         self.assertEqual(next(i).id, 1)
         self.assertEqual(next(i).id, 2)
-        self.assertEqual(next(i).id, 3)
-        self.assertEqual(next(i).id, 4)
         with self.assertRaises(StopIteration):
             next(i)
 

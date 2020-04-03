@@ -12,6 +12,8 @@ from shopify.collection import PaginatedCollection
 from pyactiveresource.collection import Collection
 
 # Store the response from the last request in the connection object
+
+
 class ShopifyConnection(pyactiveresource.connection.Connection):
     response = None
 
@@ -29,6 +31,8 @@ class ShopifyConnection(pyactiveresource.connection.Connection):
         return self.response
 
 # Inherit from pyactiveresource's metaclass in order to use ShopifyConnection
+
+
 class ShopifyResourceMeta(ResourceMeta):
 
     @property
@@ -139,17 +143,12 @@ class ShopifyResourceMeta(ResourceMeta):
 
     prefix_source = property(get_prefix_source, set_prefix_source, None,
                              'prefix for lookups for this type of object.')
-    def get_version(cls):
-        return getattr(cls._threadlocal, 'version', ShopifyResource._version)
-
-    def set_version(cls, value):
-        ShopifyResource._version = cls._threadlocal.version = value
-
-    version = property(get_version, set_version, None,
-                      'Shopify Api Version')
 
     def get_version(cls):
-        return getattr(cls._threadlocal, 'version', ShopifyResource._version)
+        if hasattr(cls._threadlocal, 'version') or ShopifyResource._version:
+            return getattr(cls._threadlocal, 'version', ShopifyResource._version)
+        else:
+            return ShopifyResource._site.split('/')[-1]
 
     def set_version(cls, value):
         ShopifyResource._version = cls._threadlocal.version = value
@@ -164,14 +163,15 @@ class ShopifyResourceMeta(ResourceMeta):
         ShopifyResource._url = cls._threadlocal.url = value
 
     url = property(get_url, set_url, None,
-                      'Base URL including protocol and shopify domain')
+                   'Base URL including protocol and shopify domain')
 
 
 @six.add_metaclass(ShopifyResourceMeta)
 class ShopifyResource(ActiveResource, mixins.Countable):
     _format = formats.JSONFormat
     _threadlocal = threading.local()
-    _headers = {'User-Agent': 'ShopifyPythonAPI/%s Python/%s' % (shopify.VERSION, sys.version.split(' ', 1)[0])}
+    _headers = {
+        'User-Agent': 'ShopifyPythonAPI/%s Python/%s' % (shopify.VERSION, sys.version.split(' ', 1)[0])}
     _version = None
     _url = None
 
@@ -208,43 +208,7 @@ class ShopifyResource(ActiveResource, mixins.Countable):
     @classmethod
     def find(cls, id_=None, from_=None, **kwargs):
         """Checks the resulting collection for pagination metadata."""
-
-        collection = super(ShopifyResource, cls).find(id_=id_, from_=from_,
-                                                      **kwargs)
-
-        # pyactiveresource currently sends all headers from the response with
-        # the collection.
-        if isinstance(collection, Collection) and \
-           "headers" in collection.metadata:
-            headers = collection.metadata["headers"]
-            if "Link" in headers:
-                pagination = cls._parse_pagination(headers["Link"])
-                return PaginatedCollection(collection, metadata={
-                    "pagination": pagination,
-                    "resource_class": cls
-                })
-
+        collection = super(ShopifyResource, cls).find(id_=id_, from_=from_, **kwargs)
+        if isinstance(collection, Collection) and "headers" in collection.metadata:
+            return PaginatedCollection(collection, metadata={"resource_class": cls}, **kwargs)
         return collection
-
-    @classmethod
-    def _parse_pagination(cls, data):
-        """Parses a Link header into a dict for cursor-based pagination.
-
-        Args:
-            data: The Link header value as a string.
-        Returns:
-            A dict with rel names as keys and URLs as values.
-        """
-
-        # Example Link header:
-        # <https://xxx.shopify.com/admin/...>; rel="previous",
-        # <https://xxx.shopify.com/admin/...>; rel="next"
-
-        values = data.split(", ")
-
-        result = {}
-        for value in values:
-            link, rel = value.split("; ")
-            result[rel.split('"')[1]] = link[1:-1]
-
-        return result
