@@ -1,4 +1,5 @@
 from ..base import ShopifyResource
+from .location import Location
 import json
 
 class FulfillmentOrder(ShopifyResource):
@@ -10,6 +11,10 @@ class FulfillmentOrder(ShopifyResource):
             return super(FulfillmentOrder, cls).find(from_="%s/orders/%s/fulfillment_orders.json" % ( cls.site, order_id), **kwargs) 
         else:
             return super(FulfillmentOrder, cls).find(key)
+    
+    def locations_for_move(self, **kwargs):
+        return Location.find(from_="%s/fulfillment_orders/%s/locations_for_move.json" % (
+            ShopifyResource.site, self.id), **kwargs)
     
 
     def cancel(self):
