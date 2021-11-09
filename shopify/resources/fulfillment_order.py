@@ -16,11 +16,6 @@ class FulfillmentOrder(ShopifyResource):
     def locations_for_move(cls, key=None, **kwargs):
         return Location.find(from_="%s/fulfillment_orders/%s/locations_for_move.json" % (
             ShopifyResource.site, key), **kwargs)
-    
-    def locations_for_move(self, **kwargs):
-        return Location.find(from_="%s/fulfillment_orders/%s/locations_for_move.json" % (
-            ShopifyResource.site, self.id), **kwargs)
-    
 
     def cancel(self):
         self._load_attributes_from_response(self.post("cancel"))
