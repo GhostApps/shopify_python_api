@@ -1,5 +1,15 @@
 == Unreleased
 
+== Version 12.0.0
+- Update API version with 2022-04 release, remove API version 2021-07 ([#591](https://github.com/Shopify/shopify_python_api/pull/591))
+
+== Version 11.0.0
+- Update API version with 2022-04 release
+- remove API version 2020-10, 2021-01, 2021-04 as they are all unsupported as of 2022-04
+
+== Version 10.0.0
+- Update API version with 2022-01 release, remove API version 2020-07
+
 == Version 9.0.0
 
 - Drop Python 2 support ([#549](https://github.com/Shopify/shopify_python_api/pull/549))
