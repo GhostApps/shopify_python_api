@@ -20,10 +20,6 @@ class Fulfillment(ShopifyResource):
         self._load_attributes_from_response(fulfill.update_tracking(tracking_info, notify_customer))
 
 
-class FulfillmentOrders(ShopifyResource):
-    _prefix_source = "/orders/$order_id/"
-
-
 class FulfillmentV2(ShopifyResource):
     _singular = "fulfillment"
     _plural = "fulfillments"
