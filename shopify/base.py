@@ -1,9 +1,11 @@
+import logging
 import pyactiveresource.connection
 from pyactiveresource.activeresource import ActiveResource, ResourceMeta, formats
 import shopify.yamlobjects
 import shopify.mixins as mixins
 import shopify
 import threading
+import time
 import sys
 from six.moves import urllib
 import six
@@ -22,12 +24,33 @@ class ShopifyConnection(pyactiveresource.connection.Connection):
 
     def _open(self, *args, **kwargs):
         self.response = None
-        try:
-            self.response = super(ShopifyConnection, self)._open(*args, **kwargs)
-        except pyactiveresource.connection.ConnectionError as err:
-            self.response = err.response
-            raise
-        return self.response
+        count_server_error = 0
+        while True:
+            try:
+                self.response = super(ShopifyConnection, self)._open(*args, **kwargs)
+                return self.response
+            except pyactiveresource.connection.ClientError as e:
+                if e.response.code == 429:
+                    retry_after = float(e.response.headers.get("Retry-After", 4))
+                    logging.warning("Service exceeds Shopify API call limit, will retry to send request in %d seconds", retry_after)
+                    time.sleep(retry_after)
+                else:
+                    raise e
+            except pyactiveresource.connection.ServerError as se:
+                # For handling Server Errors like 500, 502, 503 etc
+                if 500 <= se.code <= 599:
+                    retry_after = 2
+                    logging.warning("Server responded with error code %d will retry to send request in %d seconds", se.code, retry_after)
+                    time.sleep(retry_after)
+                    if count_server_error >= 3:
+                        logging.error("Error connecting to Shopify API, please try again")
+                        self.response = se.response
+                        raise
+                    else:
+                        logging.warning("Server Error Patch Retrying. Current Count - %d", count_server_error)
+                        count_server_error += 1
+                else:
+                    raise se
 
 
 # Inherit from pyactiveresource's metaclass in order to use ShopifyConnection
