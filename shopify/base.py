@@ -28,7 +28,7 @@ class ShopifyConnection(pyactiveresource.connection.Connection):
                 return self.response
             except pyactiveresource.connection.ClientError as e:
                 if e.response.code == 429:
-                    retry_after = float(e.response.headers.get("Retry-After", 4))
+                    retry_after = 2
                     logging.warning("%s limited, will retry in %d seconds", e.url, retry_after)
                     time.sleep(retry_after)
                 else:

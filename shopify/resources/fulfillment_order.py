@@ -24,5 +24,7 @@ class FulfillmentOrder(ShopifyResource):
         self._load_attributes_from_response(self.post("close"))
 
     def move(self, new_location_id, fulfillment_order_line_items = []):
-        body = { 'fulfillment_order' : { 'new_location_id' : new_location_id, 'fulfillment_order_line_items': fulfillment_order_line_items } }
+        body = { 'fulfillment_order' : { 'new_location_id' : new_location_id } }
+        if fulfillment_order_line_items:
+            body['fulfillment_order']['fulfillment_order_line_items'] = fulfillment_order_line_items
         self.post("move", body=json.dumps(body).encode())
