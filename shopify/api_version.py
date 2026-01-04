@@ -27,14 +27,14 @@ class ApiVersion(object):
     @classmethod
     def define_known_versions(cls):
         cls.define_version(Unstable())
-        cls.define_version(Release("2024-01"))
-        cls.define_version(Release("2024-04"))
-        cls.define_version(Release("2024-07"))
-        cls.define_version(Release("2024-10"))
         cls.define_version(Release("2025-01"))
         cls.define_version(Release("2025-04"))
         cls.define_version(Release("2025-07"))
         cls.define_version(Release("2025-10"))
+        cls.define_version(Release("2026-01"))
+        cls.define_version(Release("2026-04"))
+        cls.define_version(Release("2026-07"))
+        cls.define_version(Release("2026-10"))
 
     @classmethod
     def clear_defined_versions(cls):
